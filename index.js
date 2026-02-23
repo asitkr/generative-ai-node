@@ -1,33 +1,22 @@
 import 'dotenv/config';
 import OpenAI from "openai";
+import { createReadStream, writeFileSync } from "fs";
 
 const openAiClient = new OpenAI({ apiKey: process.env.OPENAI_KEY });
 
-const context = [
-    { role: "system", content: "keep answer short and concise" },
-]
-const aiAnswer = async (question) => {
-    context.push({ role: "user", content: question });
-    const response = await openAiClient.responses.create({
-        model: "gpt-4o-mini",
-        input: context,
+// audio to text generation using whisper-1, gpt-4o-mini-transcribe, gpt-4o-transcribe, gpt-4o-transcribe-diarize
+const main = async () => {
+    const textResponse = await openAiClient.audio.transcriptions.create({
+        model: "whisper-1", // whisper-1, gpt-4o-mini-transcribe, gpt-4o-transcribe, gpt-4o-transcribe-diarize
+        file: createReadStream("./audio.mp3"),
+        language: "en",
     });
 
-    context.push({ role: "assistant", content: response.output_text });
-    console.log(context);
-    console.log(response.output_text);
+    console.log(textResponse);
+    console.log(textResponse?.text);
+    const rawText = textResponse.text;
+
+    writeFileSync("audioToText.txt", rawText, "utf-8");
 }
 
-// aiAnswer();
-process.stdout.write("Ask your question: ");
-process.stdin.on("data", (data) => {
-    // console.log(data.toString().trim()); // to show actual input without buffer
-
-    const question = data.toString().trim();
-    if(question.toLowerCase() === "exit") {
-        console.log("process is exiting...");
-        process.exit();
-    } else {
-        aiAnswer(question);
-    }
-})
+main();
