@@ -1,41 +1,58 @@
 import 'dotenv/config';
 import OpenAI from "openai";
 import express from "express";
-import multer from 'multer';
-import path from 'path';
-import { createReadStream } from 'fs';
+import { writeFileSync} from 'fs';
 
 const app = express();
+app.use(express.urlencoded({ extended: true }));
+
 const openAiClient = new OpenAI({ apiKey: process.env.OPENAI_KEY });
 
 app.get("/", (req, res) => {
     res.send(`
-        <form action="/upload" method="post" enctype="multipart/form-data">
-            <input type="file" name="audio" accept="audio/*">
-            <button>Upload Audio</button>
+        <form action="/audio" method="post">
+            <input type="text" name="inputData" placeholder="Enter text to convert to speech">
+            <br />
+            <br />
+            <button>Generate Speech</button>
         </form>
-    `);
+        `);
 });
 
-const storage = multer.diskStorage({
-    destination: "uploads/",
-    filename: (req, file, cb) => {
-        const ext = path.extname(file.originalname);
-        cb(null, Date.now() + "-" + file.fieldname + ext);
+app.post("/audio", async (req, res) => {
+    const inputData = req?.body?.inputData;
+    if (!inputData) {
+        return res.status(400).send("Input data is required");
     }
+    res.send(inputData);
+
+    const response = await openAiClient.audio.speech.create({
+        model: "gpt-4o-mini-tts", // gpt-4o-mini-tts, gpt-4o-tts
+        input: inputData,
+        voice: "coral", // coral, daphne, jason, lucia, marcel, mia, oscar, rachel, sam, taylor
+        language: "en", // en, es, fr, de, it, pt, ja, ko, zh, hi
+    });
+
+    const baseResponse = Buffer.from(await response.arrayBuffer());
+    writeFileSync("output.mp3", baseResponse);
+    console.log(baseResponse);
+
+    res.send("Text converted to audio");
 });
 
-const upload = multer({ storage });
+// async function main() {
+//     const response = await openAiClient.audio.speech.create({
+//         model: "gpt-4o-mini-tts", // gpt-4o-mini-tts, gpt-4o-tts
+//         input: "Hello, how are you doing today?",
+//         voice: "coral", // coral, daphne, jason, lucia, marcel, mia, oscar, rachel, sam, taylor
+//     });
 
-app.post("/upload", upload.single("audio"), async (req, res) => {
-    const textResponse = await openAiClient.audio.transcriptions.create({
-            model: "whisper-1", // whisper-1, gpt-4o-mini-transcribe, gpt-4o-transcribe, gpt-4o-transcribe-diarize
-            file: createReadStream(req.file.path),
-            language: "en",
-        });
-    console.log(textResponse); // Uploaded file details
-    res.send(`<h1>Audio file received and transcribed successfully!</h1><p>${textResponse.text}</p>`);
-});
+//     const baseResponse = Buffer.from(await response.arrayBuffer());
+//     writeFileSync("output.mp3", baseResponse);
+//     console.log(baseResponse);
+// }
+
+// main();
 
 app.listen(3200, () => {
     console.log("Server is running on port 3200");
