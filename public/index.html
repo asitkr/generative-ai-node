@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<title>AI Streaming</title>
+
+<style>
+
+body{
+    margin:0;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+#container{
+    width:100%;
+    padding:20px;
+    box-sizing:border-box;
+}
+
+#output{
+    width:100%;
+    height:80vh;
+    border:1px solid #ccc;
+    padding:20px;
+    overflow-y:auto;
+    white-space:pre-wrap;
+    font-size:16px;
+    line-height:1.6;
+    box-sizing:border-box;
+}
+
+button{
+    padding:10px 20px;
+    margin-bottom:15px;
+    font-size:16px;
+    cursor:pointer;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div id="container">
+
+<h2>AI Response Streaming</h2>
+
+<button onclick="start()">Generate</button>
+
+<div id="output"></div>
+
+</div>
+
+<script>
+async function start(){
+
+    const output = document.getElementById("output");
+    output.innerHTML = "";
+
+    const response = await fetch("/", { method: "POST" });
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+
+    while(true){
+
+        const {done,value} = await reader.read();
+
+        if(done) break;
+
+        const text = decoder.decode(value);
+
+        output.innerHTML += text;
+
+        output.scrollTop = output.scrollHeight;
+    }
+}
+</script>
+
+</body>
+</html>
