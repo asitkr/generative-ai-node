@@ -14,30 +14,7 @@ const genAI = new GoogleGenAI({ apiKey: process.env.GEMINI_KEY });
 
 const data = ['dog', 'cat', 'bird', 'fish', 'hamster', 'rabbit', 'turtle', 'lizard', 'snake'];
 
-
-// async function main(videoText) {
-//     let operation = await genAI.models.generateVideos({
-//         model: "veo-3.1-generate-preview",
-//         prompt: videoText,
-//     });
-
-//     while (!operation.done) {
-//         console.log("Waiting for operation to complete...");
-
-//         await new Promise(resolve => setTimeout(resolve, 1000));
-//         operation = await genAI.operations.getVideosOperation({
-//             operation: operation.name,
-//         });
-//     }
-
-//     await genAI.files.download({
-//         file: operation.response.generatedVideos[0].video,
-//         downloadPath: "video.mp4",
-//     })
-
-//     return "video.mp4"
-// }
-
+// Example of generating embeddings for a list of words and saving them to a JSON file
 async function main() {
     const response = await genAI.models.embedContent({
         model: 'gemini-embedding-2',

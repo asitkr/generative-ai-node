@@ -13,9 +13,17 @@ const genAI = new GoogleGenAI({ apiKey: process.env.GEMINI_KEY });
 
 app.get("/", (req, res) => {
     res.send(`
-        <form action="/generate" method="post">
-            <input type="text" placeholder="Enter video description" name="video" />
-            <button>Generate Video</button>
+        <form action="/generate" method="POST">
+            <input
+                    type="text"
+                    name="video"
+                    placeholder="Enter video description"
+                    autocomplete="off"
+            />
+
+            <button type="submit">
+                Generate Video
+            </button>
         </form>
     `);
 });
@@ -25,16 +33,15 @@ app.post("/generate", async (req, res) => {
     res.send(await main(video));
 });
 
+
+// This is video generation code using Google GenAI API. It generates a video based on the provided text prompt and saves it as "video.mp4".
 async function main(videoText) {
     let operation = await genAI.models.generateVideos({
-        model: "veo-3.0-generate-001", // this is for paid plan
+        model: "veo-3.1-generate-preview",
         prompt: videoText,
-        config: {
-            numberOfImages: 1,
-        }
     });
 
-    while(!operation.done) {
+    while (!operation.done) {
         console.log("Waiting for operation to complete...");
 
         await new Promise(resolve => setTimeout(resolve, 1000));
